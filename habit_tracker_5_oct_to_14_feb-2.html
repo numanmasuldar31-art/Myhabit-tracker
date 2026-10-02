@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Habit Tracker • 5 Oct – 14 Feb</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eef0f4;font-family:Arial,sans-serif;color:#17181b}
+.app{max-width:450px;margin:auto;min-height:100vh;background:#fff}
+header{padding:24px 19px 18px;background:#111827;color:#fff;border-radius:0 0 27px 27px}
+.small{font-size:12px;opacity:.7}.title{font-size:26px;font-weight:700;margin:5px 0 17px}
+.widget{background:#252d3b;border-radius:20px;padding:16px}.row{display:flex;justify-content:space-between;align-items:center}.big{font-size:25px;font-weight:700}
+.progress{height:9px;background:#4b5563;border-radius:10px;margin-top:12px;overflow:hidden}.fill{height:100%;width:0;background:#fff;border-radius:10px;transition:.2s}
+main{padding:18px 16px 40px}.stats{display:flex;gap:8px;margin-bottom:18px}.stat{flex:1;background:#f5f6f8;border-radius:16px;padding:11px}.label{font-size:9px;color:#777}.stat b{display:block;font-size:18px;margin-top:4px}
+.section{font-size:18px;font-weight:700;margin:8px 0 11px}
+.datebar{display:flex;gap:7px;overflow-x:auto;padding-bottom:8px;margin-bottom:9px}.datebar button{flex:none;border:0;background:#f1f2f5;color:#333;padding:9px 10px;border-radius:12px;font-size:11px}.datebar button.active{background:#111827;color:#fff}
+.habit{display:flex;align-items:center;gap:12px;padding:13px;margin:8px 0;border:1px solid #e6e7eb;border-radius:16px;cursor:pointer}.habit.done{background:#f0fdf4;border-color:#bbf7d0}.emoji{font-size:20px}.name{font-weight:600;flex:1}.done .name{text-decoration:line-through;opacity:.5}.check{width:27px;height:27px;border:2px solid #c8cbd1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:bold}.done .check{background:#111827;color:#fff;border-color:#111827}
+.chartbox{margin-top:20px;border:1px solid #e6e7eb;border-radius:19px;padding:15px}.chart{height:140px;display:flex;align-items:flex-end;gap:2px;overflow:hidden}.barcol{flex:1;min-width:2px;height:100%;display:flex;align-items:flex-end;justify-content:center}.bar{width:90%;background:#111827;border-radius:3px 3px 1px 1px;min-height:1px}.chart-note{font-size:10px;color:#777;margin-top:8px}
+.summary{margin-top:16px;background:#f8fafc;border-radius:17px;padding:14px;font-size:13px;line-height:1.8}
+button.reset{width:100%;padding:12px;border:0;border-radius:13px;background:#111827;color:#fff;font-weight:600;margin-top:16px}
+</style></head>
+<body><div class="app">
+<header><div class="small">DAILY HABIT TRACKER</div><div class="title">5 Oct 2026 → 14 Feb 2027</div>
+<div class="widget"><div class="row"><div><div class="small" id="selectedLabel"></div><div class="big" id="wp">0/8</div></div><div style="font-size:29px">🔥</div></div>
+<div class="small" id="wtext">0% completed</div><div class="progress"><div class="fill" id="fill"></div></div></div></header>
+<main>
+<div class="stats"><div class="stat"><span class="label">🔥 BEST STREAK</span><b id="streak">0 days</b></div><div class="stat"><span class="label">📊 OVERALL</span><b id="overall">0%</b></div><div class="stat"><span class="label">✅ DONE</span><b id="total">0/0</b></div></div>
+<div class="section">Select a date</div><div class="datebar" id="datebar"></div>
+<div class="section">Daily habits</div><div id="habits"></div>
+<div class="chartbox"><div style="font-weight:700">📈 Full-Duration Progress</div><div class="chart" id="chart"></div><div class="chart-note">Each bar = one day • 5 Oct 2026 → 14 Feb 2027</div></div>
+<div class="summary" id="summary"></div>
+<button class="reset" onclick="resetDay()">Reset selected day</button>
+</main></div>
+<script>
+const habits=[["🌅","Wake up early"],["🏃","Exercise"],["📚","Morning study"],["🏫","School"],["📖","Study Session 1"],["📕","Study Session 2"],["📵","Less scrolling"],["🌙","Sleep early"]];
+const start=new Date(2026,9,5), end=new Date(2027,1,14);
+const dates=[]; for(let d=new Date(start);d<=end;d.setDate(d.getDate()+1)) dates.push(new Date(d));
+let selected=0;
+function key(i){return "habitTracker-"+dates[i].toISOString().slice(0,10)}
+function get(i){return JSON.parse(localStorage.getItem(key(i))||"[]")}
+function set(i,a){localStorage.setItem(key(i),JSON.stringify(a))}
+function fmt(d){return d.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})}
+function renderDatebar(){
+ const b=document.getElementById("datebar");b.innerHTML="";
+ dates.forEach((d,i)=>{const x=document.createElement("button");x.textContent=d.toLocaleDateString(undefined,{day:"numeric",month:"short"});if(i===selected)x.className="active";x.onclick=()=>{selected=i;render()};b.appendChild(x)})
+}
+function renderHabits(){
+ const box=document.getElementById("habits"),done=get(selected);box.innerHTML="";
+ habits.forEach((h,i)=>{const yes=done.includes(i),el=document.createElement("div");el.className="habit"+(yes?" done":"");
+ el.innerHTML=`<div class="emoji">${h[0]}</div><div class="name">${h[1]}</div><div class="check">${yes?"✓":""}</div>`;
+ el.onclick=()=>{let a=get(selected);a=a.includes(i)?a.filter(x=>x!==i):[...a,i];set(selected,a);render()};box.appendChild(el)})
+ const n=done.length,p=Math.round(n/8*100);
+ document.getElementById("selectedLabel").textContent=fmt(dates[selected]);document.getElementById("wp").textContent=n+"/8";document.getElementById("wtext").textContent=p+"% completed";document.getElementById("fill").style.width=p+"%";
+}
+function renderChart(){
+ const c=document.getElementById("chart");c.innerHTML="";
+ dates.forEach((d,i)=>{const n=get(i).length,col=document.createElement("div");col.className="barcol";const bar=document.createElement("div");bar.className="bar";bar.style.height=Math.max(1,n/8*100)+"%";bar.title=fmt(d)+": "+n+"/8";col.appendChild(bar);c.appendChild(col)})
+}
+function renderStats(){
+ let total=0,best=0,run=0,fullDays=0;
+ dates.forEach((d,i)=>{const n=get(i).length;total+=n;if(n===8){run++;fullDays++;best=Math.max(best,run)}else run=0});
+ const max=dates.length*8,p=Math.round(total/max*100);
+ document.getElementById("total").textContent=total+"/"+max;document.getElementById("overall").textContent=p+"%";document.getElementById("streak").textContent=best+" days";
+ document.getElementById("summary").innerHTML=`<b>🏆 Full-duration summary</b><br>📅 ${fmt(start)} → ${fmt(end)}<br>📆 Total days: ${dates.length}<br>✅ Habits completed: ${total} / ${max}<br>📊 Overall completion: ${p}%<br>🔥 Best full-day streak: ${best} day${best===1?"":"s"}<br>🌟 Full days completed: ${fullDays}`;
+}
+function resetDay(){set(selected,[]);render()}
+function render(){renderDatebar();renderHabits();renderChart();renderStats()}
+render();
+</script></body></html>
